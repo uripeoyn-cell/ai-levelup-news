@@ -144,7 +144,30 @@ function showPage(id){
 }
 function showPasswordModal(){ document.getElementById('pw-input').value=''; document.getElementById('pw-error').style.display='none'; showPage('password-modal'); }
 function checkPassword(){ if(document.getElementById('pw-input').value.trim()==='1234'){ selectedPhotos=[]; document.getElementById('photo-preview').innerHTML=''; document.getElementById('event-content').value=''; document.getElementById('char-count').textContent='0'; showPage('event-upload'); } else document.getElementById('pw-error').style.display='block'; }
-function handlePhotos(input){ Array.from(input.files).slice(0,4-selectedPhotos.length).forEach(file=>{ if(selectedPhotos.length>=4) return; const r=new FileReader(); r.onload=e=>{ selectedPhotos.push(e.target.result); renderPhotoPreview(); }; r.readAsDataURL(file); }); input.value=''; }
+function handlePhotos(input){
+  Array.from(input.files).slice(0,4-selectedPhotos.length).forEach(file=>{
+    if(selectedPhotos.length>=4) return;
+    const r=new FileReader();
+    r.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement('canvas');
+        let w=img.width, h=img.height;
+        const max=800;
+        if(w>max){ h=Math.round(h*max/w); w=max; }
+        if(h>max){ w=Math.round(w*max/h); h=max; }
+        canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        const compressed=canvas.toDataURL('image/jpeg',0.7);
+        selectedPhotos.push(compressed);
+        renderPhotoPreview();
+      };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+  input.value='';
+}
 function renderPhotoPreview(){ document.getElementById('photo-preview').innerHTML=selectedPhotos.map((src,i)=>`<img src="${src}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="selectedPhotos.splice(${i},1);renderPhotoPreview();">`).join(''); }
 function updateCharCount(){ document.getElementById('char-count').textContent=document.getElementById('event-content').value.length; }
 let events = [];
@@ -171,23 +194,28 @@ function renderEvents(){
   });
 }
 function submitEvent(){
-  const content = document.getElementById('event-content').value.trim();
-  if(!content && selectedPhotos.length === 0) return alert('사진 또는 내용을 입력해 주세요.');
-  const ev = {
-    id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
-    photo: selectedPhotos[0] || '',
-    content: content || '내용 없음',
-    created: new Date().toISOString()
-  };
-  events.push(ev);
-  if(events.length > 20) events = events.slice(-20);
-  saveEvents();
-  renderEvents();
-  alert('행사가 등록되었습니다.');
-  selectedPhotos = [];
-  document.getElementById('photo-preview').innerHTML = '';
-  document.getElementById('event-content').value = '';
-  showPage('event');
+  try {
+    const content = document.getElementById('event-content').value.trim();
+    if(!content && selectedPhotos.length === 0) return alert('사진 또는 내용을 입력해 주세요.');
+    const ev = {
+      id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      photo: selectedPhotos[0] || '',
+      content: content || '내용 없음',
+      created: new Date().toISOString()
+    };
+    events.push(ev);
+    if(events.length > 20) events = events.slice(-20);
+    saveEvents();
+    renderEvents();
+    alert('행사가 등록되었습니다.');
+    selectedPhotos = [];
+    document.getElementById('photo-preview').innerHTML = '';
+    document.getElementById('event-content').value = '';
+    showPage('event');
+  } catch(err) {
+    console.error(err);
+    alert('저장 중 오류가 발생했습니다. 사진 크기를 줄이거나 다시 시도해 주세요.');
+  }
 }
 function handleProductPhoto(input){ const file=input.files[0]; if(!file) return; const r=new FileReader(); r.onload=e=>{ productPhoto=e.target.result; document.getElementById('product-photo-preview').innerHTML=`<img src="${productPhoto}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;">`; }; r.readAsDataURL(file); }
 function submitProduct(){ const name=document.getElementById('product-name').value.trim(); const desc=document.getElementById('product-desc').value.trim(); if(!name) return alert('제품명을 입력해 주세요.'); const id='prod'+(++productIdCounter); const card=document.createElement('div'); card.className='card'; card.dataset.productId=id; card.innerHTML=(productPhoto?`<img src="${productPhoto}">`:'')+`<div class="card-body"><div class="card-title">${name}</div><div class="card-desc">${desc||'설명 없음'}</div><div style="margin-top:12px;padding-top:12px;border-top:1px solid #E2E8F0;"><input type="text" placeholder="구매 희망 메시지" style="width:100%;padding:10px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:8px;" onkeypress="if(event.key==='Enter')addComment(this,'${id}')"><button style="background:var(--blue);color:white;border:none;padding:8px 16px;border-radius:8px;" onclick="addComment(this.previousElementSibling,'${id}')">메시지 남기기</button></div></div>`; document.getElementById('product-list').prepend(card); productPhoto=null; document.getElementById('product-photo-preview').innerHTML=''; document.getElementById('product-name').value=''; document.getElementById('product-desc').value=''; alert('제품이 등록되었습니다.'); showPage('shop'); }

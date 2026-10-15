@@ -126,6 +126,19 @@ header {
   font-weight: 700;
   width: 100%;
   margin-top: 12px;
+  cursor: pointer;
+}
+.btn-secondary {
+  background: #E2E8F0;
+  color: var(--text);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  width: 100%;
+  margin-top: 8px;
+  cursor: pointer;
 }
 .upload-area {
   border: 2px dashed #CBD5E1;
@@ -143,7 +156,38 @@ header {
   font-size: 16px;
   margin: 12px 0;
   min-height: 100px;
+  resize: vertical;
 }
+.password-box {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  font-size: 20px;
+  text-align: center;
+  letter-spacing: 4px;
+  margin: 16px 0;
+}
+.photo-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.photo-preview img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.char-count {
+  text-align: right;
+  font-size: 13px;
+  color: var(--gray);
+  margin-top: -8px;
+  margin-bottom: 8px;
+}
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
@@ -180,6 +224,8 @@ header {
 <div id="event" class="page">
   <div class="container">
     <div class="section-title">레벨업 행사</div>
+    
+    <!-- 기존 행사 카드 -->
     <div class="card">
       <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800" alt="">
       <div class="card-body">
@@ -187,6 +233,46 @@ header {
         <div class="card-desc">시니어와 크리에이터가 함께하는 AI 작품 전시가 열립니다. 많은 참여 부탁드립니다.</div>
       </div>
     </div>
+
+    <!-- 업로드된 행사들이 여기에 동적으로 추가됨 -->
+    <div id="event-list"></div>
+
+    <!-- 행사 업로드 버튼 -->
+    <button class="btn" onclick="showPasswordModal()">행사 업로드</button>
+  </div>
+</div>
+
+<!-- 비밀번호 모달 -->
+<div id="password-modal" class="page">
+  <div class="container">
+    <div class="section-title">행사 업로드</div>
+    <p style="color:var(--gray); margin-bottom:8px;">관리자 비밀번호를 입력하세요</p>
+    <input type="password" id="pw-input" class="password-box" placeholder="••••" maxlength="4" inputmode="numeric">
+    <button class="btn" onclick="checkPassword()">확인</button>
+    <button class="btn-secondary" onclick="showPage('event')">취소</button>
+    <p id="pw-error" style="color:#EF4444; text-align:center; margin-top:12px; display:none;">비밀번호가 올바르지 않습니다.</p>
+  </div>
+</div>
+
+<!-- 행사 업로드 폼 -->
+<div id="event-upload" class="page">
+  <div class="container">
+    <div class="section-title">행사 등록</div>
+    
+    <p style="font-weight:600; margin-bottom:8px;">사진 (최대 4장)</p>
+    <div class="upload-area" onclick="document.getElementById('photo-input').click()">
+      <div style="font-size:40px;">📷</div>
+      <p style="margin-top:8px; color:var(--gray);">사진을 선택하세요 (최대 4장)</p>
+    </div>
+    <input type="file" id="photo-input" accept="image/*" multiple style="display:none;" onchange="handlePhotos(this)">
+    <div id="photo-preview" class="photo-preview"></div>
+
+    <p style="font-weight:600; margin:16px 0 8px;">행사 내용 (최대 200자)</p>
+    <textarea id="event-content" class="input-box" placeholder="행사 일정과 내용을 입력하세요" maxlength="200" oninput="updateCharCount()"></textarea>
+    <div class="char-count"><span id="char-count">0</span>/200</div>
+
+    <button class="btn" onclick="submitEvent()">행사 등록하기</button>
+    <button class="btn-secondary" onclick="showPage('event')">취소</button>
   </div>
 </div>
 
@@ -245,15 +331,115 @@ header {
 </nav>
 
 <script>
+let selectedPhotos = [];
+
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  // 네비게이션 활성화는 클릭된 버튼만
+  if (event && event.currentTarget && event.currentTarget.classList.contains('nav-item')) {
+    event.currentTarget.classList.add('active');
+  }
 }
+
 function openUpload() {
   showPage('upload');
 }
+
+function showPasswordModal() {
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').style.display = 'none';
+  showPage('password-modal');
+  setTimeout(() => document.getElementById('pw-input').focus(), 100);
+}
+
+function checkPassword() {
+  const pw = document.getElementById('pw-input').value.trim();
+  if (pw === '026') {
+    document.getElementById('pw-error').style.display = 'none';
+    selectedPhotos = [];
+    document.getElementById('photo-preview').innerHTML = '';
+    document.getElementById('event-content').value = '';
+    updateCharCount();
+    showPage('event-upload');
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+  }
+}
+
+function handlePhotos(input) {
+  const files = Array.from(input.files).slice(0, 4 - selectedPhotos.length);
+  files.forEach(file => {
+    if (selectedPhotos.length >= 4) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      selectedPhotos.push(e.target.result);
+      renderPhotoPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderPhotoPreview() {
+  const container = document.getElementById('photo-preview');
+  container.innerHTML = selectedPhotos.map((src, i) => 
+    `<img src="${src}" alt="preview ${i+1}" onclick="removePhoto(${i})" style="cursor:pointer;" title="클릭하여 삭제">`
+  ).join('');
+}
+
+function removePhoto(index) {
+  selectedPhotos.splice(index, 1);
+  renderPhotoPreview();
+}
+
+function updateCharCount() {
+  const len = document.getElementById('event-content').value.length;
+  document.getElementById('char-count').textContent = len;
+}
+
+function submitEvent() {
+  const content = document.getElementById('event-content').value.trim();
+  if (!content && selectedPhotos.length === 0) {
+    alert('사진 또는 내용을 입력해 주세요.');
+    return;
+  }
+
+  const list = document.getElementById('event-list');
+  const card = document.createElement('div');
+  card.className = 'card';
+  
+  let imgHtml = '';
+  if (selectedPhotos.length > 0) {
+    imgHtml = `<img src="${selectedPhotos[0]}" alt="">`;
+  }
+  
+  card.innerHTML = `
+    ${imgHtml}
+    <div class="card-body">
+      <div class="card-title">새 행사</div>
+      <div class="card-desc">${content || '내용 없음'}</div>
+      ${selectedPhotos.length > 1 ? `<div style="font-size:13px; color:var(--gray); margin-top:6px;">사진 ${selectedPhotos.length}장</div>` : ''}
+    </div>
+  `;
+  
+  list.prepend(card);
+  
+  alert('행사가 등록되었습니다.');
+  showPage('event');
+}
+
+// 비밀번호 입력 시 엔터키 지원
+document.addEventListener('DOMContentLoaded', () => {
+  const pwInput = document.getElementById('pw-input');
+  if (pwInput) {
+    pwInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter') checkPassword();
+    });
+  }
+});
 </script>
 </body>
 </html>

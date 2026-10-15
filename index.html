@@ -149,30 +149,57 @@ function submitProduct(){ const name=document.getElementById('product-name').val
 function addComment(input,id){ const text=input.value.trim(); if(!text) return; const card=document.querySelector(`[data-product-id="${id}"]`); if(!card) return; const div=document.createElement('div'); div.style.cssText='background:#F8FAFC;padding:8px 12px;border-radius:8px;margin-bottom:6px;font-size:14px;'; div.textContent=text; input.parentNode.insertBefore(div,input); input.value=''; }
 function journalistLogin(){ const name=document.getElementById('j-name').value.trim(); const phone=document.getElementById('j-phone').value.trim(); if(!name || phone.length!==4) return alert('이름과 전화번호 뒷자리 4자리를 정확히 입력해 주세요.'); currentJournalist={name,phone}; localStorage.setItem('journalist',JSON.stringify(currentJournalist)); document.getElementById('login-msg').textContent=`${name} 기자님, 환영합니다.`; setTimeout(()=>{ document.getElementById('writer-name').textContent=`${name} 기자`; showPage('article-write'); },800); }
 function checkJournalistAndWrite(){ const saved=localStorage.getItem('journalist'); if(saved){ currentJournalist=JSON.parse(saved); document.getElementById('writer-name').textContent=`${currentJournalist.name} 기자`; showPage('article-write'); } else showPage('journalist-login'); }
-function handleArticlePhoto(input){ const file=input.files[0]; if(!file) return; const r=new FileReader(); r.onload=e=>{ articlePhoto=e.target.result; document.getElementById('article-photo-preview').innerHTML=`<img src="${articlePhoto}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;">`; }; r.readAsDataURL(file); }
-function submitArticle(){
-  const text = document.getElementById('article-content').value.trim();
-  if(!text) return alert('내용을 입력해 주세요.');
-  if(!currentJournalist) return alert('기자 로그인이 필요합니다.');
-  const title = text.slice(0,40)+(text.length>40?'...':'');
-  const art = {
-    id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
-    photo: articlePhoto || '',
-    title: title,
-    content: text,
-    author: currentJournalist.name,
-    created: new Date().toISOString()
+function handleArticlePhoto(input){
+  const file=input.files[0];
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      let w=img.width, h=img.height;
+      const max=800;
+      if(w>max){ h=Math.round(h*max/w); w=max; }
+      if(h>max){ w=Math.round(w*max/h); h=max; }
+      canvas.width=w; canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      articlePhoto=canvas.toDataURL('image/jpeg',0.75);
+      document.getElementById('article-photo-preview').innerHTML=`<img src="${articlePhoto}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;">`;
+    };
+    img.src=e.target.result;
   };
-  articles.push(art);
-  if(articles.length > 200) articles = articles.slice(-200);
-  saveArticles();
-  renderGallery();
-  alert('기사가 업로드되었습니다.');
-  articlePhoto = null;
-  document.getElementById('article-photo-preview').innerHTML = '';
-  document.getElementById('article-content').value = '';
-  document.getElementById('a-char').textContent = '0';
-  showPage('home');
+  r.readAsDataURL(file);
+  input.value='';
+}
+function submitArticle(){
+  try {
+    const text = document.getElementById('article-content').value.trim();
+    if(!text) return alert('내용을 입력해 주세요.');
+    if(!currentJournalist) return alert('기자 로그인이 필요합니다.');
+    const title = text.slice(0,40)+(text.length>40?'...':'');
+    const art = {
+      id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      photo: articlePhoto || '',
+      title: title,
+      content: text,
+      author: currentJournalist.name,
+      created: new Date().toISOString()
+    };
+    articles.push(art);
+    if(articles.length > 200) articles = articles.slice(-200);
+    saveArticles();
+    renderGallery();
+    alert('기사가 업로드되었습니다.');
+    articlePhoto = null;
+    document.getElementById('article-photo-preview').innerHTML = '';
+    document.getElementById('article-content').value = '';
+    document.getElementById('a-char').textContent = '0';
+    showPage('home');
+  } catch(err) {
+    console.error(err);
+    alert('저장 중 오류가 발생했습니다. 사진 크기를 줄이거나 다시 시도해 주세요.\n' + (err.message||''));
+  }
 }
 function handleBoardPhoto(input){ const file=input.files[0]; if(!file) return; const r=new FileReader(); r.onload=e=>{ boardPhoto=e.target.result; document.getElementById('board-photo-preview').innerHTML=`<img src="${boardPhoto}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;">`; }; r.readAsDataURL(file); }
 function submitBoardPost(){ const title=document.getElementById('board-title').value.trim(); const content=document.getElementById('board-content').value.trim(); if(!title) return alert('제목을 입력해 주세요.'); const card=document.createElement('div'); card.className='card'; card.innerHTML=(boardPhoto?`<img src="${boardPhoto}">`:'')+`<div class="card-body"><div class="card-title">${title}</div><div class="card-desc">${content||'내용 없음'}</div><button class="btn-secondary" style="margin-top:8px;background:#FEE2E2;color:#EF4444;" onclick="this.closest('.card').remove()">삭제</button></div></div>`; document.getElementById('board-list').prepend(card); boardPhoto=null; document.getElementById('board-photo-preview').innerHTML=''; document.getElementById('board-title').value=''; document.getElementById('board-content').value=''; alert('게시물이 등록되었습니다.'); showPage('board'); }

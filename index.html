@@ -1,1 +1,250 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AI Level Up News</title>
+<style>
+:root { --navy: #0A2540; --blue: #1A56DB; --cyan: #00D4FF; --light: #F8FAFC; --gray: #64748B; --text: #0F172A; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; background: #fff; color: var(--text); max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+header { background: var(--navy); color: white; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.logo span { color: var(--cyan); }
+.menu-btn { font-size: 24px; background: none; border: none; color: white; }
+.container { padding: 16px; }
+.section-title { font-size: 22px; font-weight: 800; margin: 20px 0 12px; color: var(--navy); }
+.card { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #E2E8F0; }
+.card img { width: 100%; height: 180px; object-fit: cover; }
+.card-body { padding: 14px 16px; }
+.card-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; line-height: 1.4; }
+.card-desc { font-size: 15px; color: var(--gray); line-height: 1.5; }
+.bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; border-top: 1px solid #E2E8F0; display: flex; justify-content: space-around; padding: 8px 0 12px; z-index: 100; }
+.nav-item { text-align: center; font-size: 11px; color: var(--gray); background: none; border: none; padding: 4px; cursor: pointer; }
+.nav-item.active { color: var(--blue); font-weight: 700; }
+.nav-item .icon { font-size: 22px; display: block; margin-bottom: 2px; }
+.fab { position: fixed; right: 20px; bottom: 90px; width: 60px; height: 60px; background: var(--blue); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 4px 16px rgba(26,86,219,0.4); border: none; z-index: 90; }
+.page { display: none; }
+.page.active { display: block; }
+.hero { background: linear-gradient(135deg, var(--navy), #1e3a5f); color: white; padding: 24px 20px; border-radius: 16px; margin-bottom: 20px; }
+.hero h2 { font-size: 24px; margin-bottom: 8px; }
+.btn { background: var(--blue); color: white; border: none; padding: 14px 24px; border-radius: 12px; font-size: 16px; font-weight: 700; width: 100%; margin-top: 12px; cursor: pointer; }
+.btn-secondary { background: #E2E8F0; color: var(--text); border: none; padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 600; width: 100%; margin-top: 8px; cursor: pointer; }
+.btn-small { background: var(--blue); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.upload-area { border: 2px dashed #CBD5E1; border-radius: 16px; padding: 40px 20px; text-align: center; margin: 16px 0; background: var(--light); cursor: pointer; }
+.input-box { width: 100%; padding: 16px; border: 1px solid #E2E8F0; border-radius: 12px; font-size: 16px; margin: 12px 0; min-height: 100px; resize: vertical; }
+.password-box { width: 100%; padding: 16px; border: 1px solid #E2E8F0; border-radius: 12px; font-size: 20px; text-align: center; letter-spacing: 4px; margin: 16px 0; }
+.photo-preview { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.photo-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+.char-count { text-align: right; font-size: 13px; color: var(--gray); margin-top: -8px; margin-bottom: 8px; }
+.comment-box { margin-top: 12px; padding-top: 12px; border-top: 1px solid #E2E8F0; }
+.comment-input { width: 100%; padding: 10px 12px; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 14px; margin-bottom: 8px; }
+.comment-item { background: #F8FAFC; padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-size: 14px; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">AI <span>Level Up</span> News</div>
+  <button class="menu-btn">☰</button>
+</header>
+<div id="home" class="page active">
+  <div class="container">
+    <div class="hero"><h2>오늘의 레벨업 뉴스</h2><p>사진 한 장과 말로 만드는 쉬운 AI 뉴스</p></div>
+    <div class="section-title">주요 뉴스</div>
+    <div class="card"><img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800"><div class="card-body"><div class="card-title">시니어 AI 교육, 경로당에서 시작됩니다</div><div class="card-desc">전국 경로당을 중심으로 AI 레벨업 교육이 확대되고 있습니다. 말로 하는 인공지능이 시니어의 일상을 바꿉니다.</div></div></div>
+    <div class="card"><img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800"><div class="card-body"><div class="card-title">AI 우리편, 10,000명 교육 성과</div><div class="card-desc">지난 4년간 60세 이상 시니어 1만 명을 교육하며 새로운 경제활동의 길을 열었습니다.</div></div></div>
+  </div>
+</div>
+<div id="event" class="page">
+  <div class="container">
+    <div class="section-title">레벨업 행사</div>
+    <div class="card"><img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800"><div class="card-body"><div class="card-title">AI 아트 전시 & 콘테스트</div><div class="card-desc">시니어와 크리에이터가 함께하는 AI 작품 전시가 열립니다. 많은 참여 부탁드립니다.</div></div></div>
+    <div id="event-list"></div>
+    <button class="btn" onclick="showPasswordModal()">행사 업로드</button>
+  </div>
+</div>
+<div id="password-modal" class="page">
+  <div class="container">
+    <div class="section-title">행사 업로드</div>
+    <p style="color:var(--gray); margin-bottom:8px;">관리자 비밀번호를 입력하세요</p>
+    <input type="password" id="pw-input" class="password-box" placeholder="••••" maxlength="4" inputmode="numeric">
+    <button class="btn" onclick="checkPassword()">확인</button>
+    <button class="btn-secondary" onclick="showPage('event')">취소</button>
+    <p id="pw-error" style="color:#EF4444; text-align:center; margin-top:12px; display:none;">비밀번호가 올바르지 않습니다.</p>
+  </div>
+</div>
+<div id="event-upload" class="page">
+  <div class="container">
+    <div class="section-title">행사 등록</div>
+    <p style="font-weight:600; margin-bottom:8px;">사진 (최대 4장)</p>
+    <div class="upload-area" onclick="document.getElementById('photo-input').click()"><div style="font-size:40px;">📷</div><p style="margin-top:8px; color:var(--gray);">사진을 선택하세요 (최대 4장)</p></div>
+    <input type="file" id="photo-input" accept="image/*" multiple style="display:none;" onchange="handlePhotos(this)">
+    <div id="photo-preview" class="photo-preview"></div>
+    <p style="font-weight:600; margin:16px 0 8px;">행사 내용 (최대 200자)</p>
+    <textarea id="event-content" class="input-box" placeholder="행사 일정과 내용을 입력하세요" maxlength="200" oninput="updateCharCount()"></textarea>
+    <div class="char-count"><span id="char-count">0</span>/200</div>
+    <button class="btn" onclick="submitEvent()">행사 등록하기</button>
+    <button class="btn-secondary" onclick="showPage('event')">취소</button>
+  </div>
+</div>
+<div id="board" class="page">
+  <div class="container">
+    <div class="section-title">레벨업 게시판</div>
+    <div class="card"><img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800"><div class="card-body"><div class="card-title">산 정상에서 바라본 풍경</div><div class="card-desc">함께 걸으니 건강도 레벨업! 등산 초보자도 환영합니다.</div></div></div>
+    <div class="card"><img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800"><div class="card-body"><div class="card-title">건강한 식단 공유</div><div class="card-desc">좋은 음식이 건강의 시작입니다. 함께 나눠요.</div></div></div>
+  </div>
+  <button class="fab" onclick="openUpload()">+</button>
+</div>
+<div id="upload" class="page">
+  <div class="container">
+    <div class="section-title">글 올리기</div>
+    <div class="upload-area"><div style="font-size:48px;">📷</div><p style="margin-top:12px; color:var(--gray);">사진을 찍거나 선택하세요</p></div>
+    <textarea class="input-box" placeholder="말로 설명하거나 여기에 타이핑하세요"></textarea>
+    <button class="btn">AI로 정리하기</button>
+  </div>
+</div>
+<div id="shop" class="page">
+  <div class="container">
+    <div class="section-title">우리편 상점</div>
+    <div id="product-list">
+      <div class="card" data-product-id="demo1">
+        <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800">
+        <div class="card-body">
+          <div class="card-title">중고 태블릿 판매</div>
+          <div class="card-desc">상태 좋은 태블릿입니다. 가격: 150,000원<br>구매 방법: 댓글로 연락 주세요</div>
+          <div class="comment-box">
+            <div class="comment-item">구매 희망합니다! 연락 주세요.</div>
+            <input type="text" class="comment-input" placeholder="구매 희망 메시지를 남겨주세요" onkeypress="if(event.key==='Enter') addComment(this, 'demo1')">
+            <button class="btn-small" onclick="addComment(this.previousElementSibling, 'demo1')">메시지 남기기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn" onclick="showPage('product-upload')">제품 등록하기</button>
+  </div>
+</div>
+<div id="product-upload" class="page">
+  <div class="container">
+    <div class="section-title">제품 등록</div>
+    <p style="font-weight:600; margin-bottom:8px;">제품 사진 (1장)</p>
+    <div class="upload-area" onclick="document.getElementById('product-photo').click()"><div style="font-size:40px;">📷</div><p style="margin-top:8px; color:var(--gray);">제품 사진을 찍어주세요</p></div>
+    <input type="file" id="product-photo" accept="image/*" style="display:none;" onchange="handleProductPhoto(this)">
+    <div id="product-photo-preview" class="photo-preview"></div>
+    <p style="font-weight:600; margin:16px 0 8px;">제품명</p>
+    <input type="text" id="product-name" class="input-box" style="min-height:48px;" placeholder="제품 이름을 입력하세요">
+    <p style="font-weight:600; margin:16px 0 8px;">판매 가격 · 구매 방법</p>
+    <textarea id="product-desc" class="input-box" placeholder="가격, 상태, 구매 방법 등을 자세히 적어주세요"></textarea>
+    <button class="btn" onclick="submitProduct()">제품 등록하기</button>
+    <button class="btn-secondary" onclick="showPage('shop')">취소</button>
+  </div>
+</div>
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="showPage('home')"><span class="icon">🏠</span>홈</button>
+  <button class="nav-item" onclick="showPage('event')"><span class="icon">📅</span>행사</button>
+  <button class="nav-item" onclick="showPage('board')"><span class="icon">💬</span>게시판</button>
+  <button class="nav-item" onclick="showPage('shop')"><span class="icon">🛒</span>상점</button>
+  <button class="nav-item" onclick="showPage('upload')"><span class="icon">✍️</span>글쓰기</button>
+</nav>
+<script>
+let selectedPhotos = [];
+let productPhoto = null;
+let productIdCounter = 1;
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (event && event.currentTarget && event.currentTarget.classList.contains('nav-item')) event.currentTarget.classList.add('active');
+}
+function openUpload() { showPage('upload'); }
+function showPasswordModal() {
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').style.display = 'none';
+  showPage('password-modal');
+  setTimeout(() => document.getElementById('pw-input').focus(), 100);
+}
+function checkPassword() {
+  const pw = document.getElementById('pw-input').value.trim();
+  if (pw === '1234') {
+    document.getElementById('pw-error').style.display = 'none';
+    selectedPhotos = [];
+    document.getElementById('photo-preview').innerHTML = '';
+    document.getElementById('event-content').value = '';
+    updateCharCount();
+    showPage('event-upload');
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+  }
+}
+function handlePhotos(input) {
+  const files = Array.from(input.files).slice(0, 4 - selectedPhotos.length);
+  files.forEach(file => {
+    if (selectedPhotos.length >= 4) return;
+    const reader = new FileReader();
+    reader.onload = e => { selectedPhotos.push(e.target.result); renderPhotoPreview(); };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+function renderPhotoPreview() {
+  document.getElementById('photo-preview').innerHTML = selectedPhotos.map((src, i) => `<img src="${src}" onclick="removePhoto(${i})" style="cursor:pointer;" title="클릭하여 삭제">`).join('');
+}
+function removePhoto(index) { selectedPhotos.splice(index, 1); renderPhotoPreview(); }
+function updateCharCount() { document.getElementById('char-count').textContent = document.getElementById('event-content').value.length; }
+function submitEvent() {
+  const content = document.getElementById('event-content').value.trim();
+  if (!content && selectedPhotos.length === 0) { alert('사진 또는 내용을 입력해 주세요.'); return; }
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = (selectedPhotos[0] ? `<img src="${selectedPhotos[0]}">` : '') + `<div class="card-body"><div class="card-title">새 행사</div><div class="card-desc">${content || '내용 없음'}</div></div>`;
+  document.getElementById('event-list').prepend(card);
+  alert('행사가 등록되었습니다.');
+  showPage('event');
+}
+function handleProductPhoto(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    productPhoto = e.target.result;
+    document.getElementById('product-photo-preview').innerHTML = `<img src="${productPhoto}" onclick="productPhoto=null; this.remove();" style="cursor:pointer;">`;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function submitProduct() {
+  const name = document.getElementById('product-name').value.trim();
+  const desc = document.getElementById('product-desc').value.trim();
+  if (!name) { alert('제품명을 입력해 주세요.'); return; }
+  if (!productPhoto && !desc) { alert('사진 또는 설명을 입력해 주세요.'); return; }
+  const id = 'prod' + (++productIdCounter);
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.productId = id;
+  card.innerHTML = (productPhoto ? `<img src="${productPhoto}">` : '') + `<div class="card-body"><div class="card-title">${name}</div><div class="card-desc">${desc || '설명 없음'}</div><div class="comment-box"><input type="text" class="comment-input" placeholder="구매 희망 메시지를 남겨주세요" onkeypress="if(event.key==='Enter') addComment(this, '${id}')"><button class="btn-small" onclick="addComment(this.previousElementSibling, '${id}')">메시지 남기기</button></div></div>`;
+  document.getElementById('product-list').prepend(card);
+  productPhoto = null;
+  document.getElementById('product-photo-preview').innerHTML = '';
+  document.getElementById('product-name').value = '';
+  document.getElementById('product-desc').value = '';
+  alert('제품이 등록되었습니다.');
+  showPage('shop');
+}
+function addComment(input, productId) {
+  const text = input.value.trim(); if (!text) return;
+  const card = document.querySelector(`[data-product-id="${productId}"]`);
+  if (!card) return;
+  const commentDiv = document.createElement('div');
+  commentDiv.className = 'comment-item';
+  commentDiv.textContent = text;
+  const inputEl = card.querySelector('.comment-input');
+  inputEl.parentNode.insertBefore(commentDiv, inputEl);
+  input.value = '';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const pw = document.getElementById('pw-input');
+  if (pw) pw.addEventListener('keypress', e => { if (e.key === 'Enter') checkPassword(); });
+});
+</script>
+</body>
+</html>

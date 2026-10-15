@@ -147,7 +147,48 @@ function checkPassword(){ if(document.getElementById('pw-input').value.trim()===
 function handlePhotos(input){ Array.from(input.files).slice(0,4-selectedPhotos.length).forEach(file=>{ if(selectedPhotos.length>=4) return; const r=new FileReader(); r.onload=e=>{ selectedPhotos.push(e.target.result); renderPhotoPreview(); }; r.readAsDataURL(file); }); input.value=''; }
 function renderPhotoPreview(){ document.getElementById('photo-preview').innerHTML=selectedPhotos.map((src,i)=>`<img src="${src}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="selectedPhotos.splice(${i},1);renderPhotoPreview();">`).join(''); }
 function updateCharCount(){ document.getElementById('char-count').textContent=document.getElementById('event-content').value.length; }
-function submitEvent(){ const content=document.getElementById('event-content').value.trim(); if(!content && selectedPhotos.length===0) return alert('사진 또는 내용을 입력해 주세요.'); const card=document.createElement('div'); card.className='card'; card.innerHTML=(selectedPhotos[0]?`<img src="${selectedPhotos[0]}">`:'')+`<div class="card-body"><div class="card-title">새 행사</div><div class="card-desc">${content||'내용 없음'}</div></div>`; document.getElementById('event-list').prepend(card); alert('행사가 등록되었습니다.'); showPage('event'); }
+let events = [];
+function loadEvents(){
+  try {
+    const raw = localStorage.getItem('levelup_events');
+    events = raw ? JSON.parse(raw) : [];
+  } catch(e){ events = []; }
+  if(events.length > 20) events = events.slice(-20);
+  renderEvents();
+}
+function saveEvents(){
+  localStorage.setItem('levelup_events', JSON.stringify(events));
+}
+function renderEvents(){
+  const list = document.getElementById('event-list');
+  if(!list) return;
+  list.innerHTML = '';
+  [...events].reverse().forEach(ev => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = (ev.photo ? `<img src="${ev.photo}">` : '') + `<div class="card-body"><div class="card-desc">${ev.content || '내용 없음'}</div></div>`;
+    list.appendChild(card);
+  });
+}
+function submitEvent(){
+  const content = document.getElementById('event-content').value.trim();
+  if(!content && selectedPhotos.length === 0) return alert('사진 또는 내용을 입력해 주세요.');
+  const ev = {
+    id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
+    photo: selectedPhotos[0] || '',
+    content: content || '내용 없음',
+    created: new Date().toISOString()
+  };
+  events.push(ev);
+  if(events.length > 20) events = events.slice(-20);
+  saveEvents();
+  renderEvents();
+  alert('행사가 등록되었습니다.');
+  selectedPhotos = [];
+  document.getElementById('photo-preview').innerHTML = '';
+  document.getElementById('event-content').value = '';
+  showPage('event');
+}
 function handleProductPhoto(input){ const file=input.files[0]; if(!file) return; const r=new FileReader(); r.onload=e=>{ productPhoto=e.target.result; document.getElementById('product-photo-preview').innerHTML=`<img src="${productPhoto}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;">`; }; r.readAsDataURL(file); }
 function submitProduct(){ const name=document.getElementById('product-name').value.trim(); const desc=document.getElementById('product-desc').value.trim(); if(!name) return alert('제품명을 입력해 주세요.'); const id='prod'+(++productIdCounter); const card=document.createElement('div'); card.className='card'; card.dataset.productId=id; card.innerHTML=(productPhoto?`<img src="${productPhoto}">`:'')+`<div class="card-body"><div class="card-title">${name}</div><div class="card-desc">${desc||'설명 없음'}</div><div style="margin-top:12px;padding-top:12px;border-top:1px solid #E2E8F0;"><input type="text" placeholder="구매 희망 메시지" style="width:100%;padding:10px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:8px;" onkeypress="if(event.key==='Enter')addComment(this,'${id}')"><button style="background:var(--blue);color:white;border:none;padding:8px 16px;border-radius:8px;" onclick="addComment(this.previousElementSibling,'${id}')">메시지 남기기</button></div></div>`; document.getElementById('product-list').prepend(card); productPhoto=null; document.getElementById('product-photo-preview').innerHTML=''; document.getElementById('product-name').value=''; document.getElementById('product-desc').value=''; alert('제품이 등록되었습니다.'); showPage('shop'); }
 function addComment(input,id){ const text=input.value.trim(); if(!text) return; const card=document.querySelector(`[data-product-id="${id}"]`); if(!card) return; const div=document.createElement('div'); div.style.cssText='background:#F8FAFC;padding:8px 12px;border-radius:8px;margin-bottom:6px;font-size:14px;'; div.textContent=text; input.parentNode.insertBefore(div,input); input.value=''; }
@@ -241,6 +282,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const saved = localStorage.getItem('journalist');
   if(saved) currentJournalist = JSON.parse(saved);
   loadArticles();
+  loadEvents();
 });
 </script>
 </body>

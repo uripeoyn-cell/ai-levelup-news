@@ -305,9 +305,17 @@ async function submitArticle(){
       created: new Date().toISOString()
     };
     
-    if(typeof supabase !== 'undefined'){
-      const { error } = await supabase.from('articles').insert(art);
-      if(error) console.error(error);
+    // Initialize supabase if needed
+    let sb = (typeof supabase !== 'undefined' && supabase.from) ? supabase : null;
+    if(!sb && window.supabase){
+      sb = window.supabase.createClient('https://midrhpocomwwappgfqlg.supabase.co', 'sb_publishable_mricNZqorMFRJkjhkSVECw_OfdF2cha');
+    }
+    
+    if(sb && sb.from){
+      const { error } = await sb.from('articles').insert(art);
+      if(error) throw error;
+    } else {
+      throw new Error('Supabase 연결 실패');
     }
     
     if(typeof articles !== 'undefined'){
@@ -321,6 +329,7 @@ async function submitArticle(){
     const preview = document.getElementById('article-photo-preview');
     if(preview) preview.innerHTML = '';
     showPage('home');
+    location.reload();
   } catch(err) {
     console.error(err);
     alert('저장 중 오류: ' + err.message);

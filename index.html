@@ -50,7 +50,80 @@ header { background:#fff; padding:0; position:sticky; top:0; z-index:100; displa
 .fullscreen .delete-btn { position:absolute; bottom:20px; right:20px; background:rgba(239,68,68,0.9); color:white; border:none; font-size:20px; width:48px; height:48px; border-radius:50%; cursor:pointer; display:none; align-items:center; justify-content:center; }
 .fullscreen .delete-btn.show { display:flex; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+let boards = [];
+async function loadBoards(){
+  try {
+    const { data, error } = await supabase.from('boards').select('*').order('created', { ascending: false }).limit(100);
+    if(error) throw error;
+    boards = data || [];
+  } catch(e){
+    console.error('loadBoards failed:', e);
+    boards = [];
+  }
+  renderBoards();
+}
+function renderBoards(){
+  const list = document.getElementById('board-list');
+  if(!list) return;
+  list.innerHTML = boards.map(b => `
+    <div class="card">
+      ${b.photo ? '<img src="'+b.photo+'" style="width:100%;height:180px;object-fit:cover;">' : ''}
+      <div class="card-body">
+        <div class="card-title">${b.title || ''}</div>
+        <div class="card-desc">${b.content || ''}</div>
+        <button class="btn-secondary" style="margin-top:8px;background:#FEE2E2;color:#EF4444;" onclick="deleteBoard('${b.id}')">삭제</button>
+      </div>
+    </div>
+  `).join('') || '<div style="text-align:center;color:#64748B;padding:40px;">게시글이 없습니다.</div>';
+}
+async function deleteBoard(id){
+  if(!confirm('삭제하시겠습니까?')) return;
+  const { error } = await supabase.from('boards').delete().eq('id', id);
+  if(error) return alert('삭제 실패');
+  boards = boards.filter(b => b.id !== id);
+  renderBoards();
+}
+async function submitBoard(){
+  try {
+    const title = document.getElementById('board-title').value.trim();
+    const text = document.getElementById('board-content').value.trim();
+    if(!title) return alert('제목을 입력해 주세요.');
+    let photoUrl = '';
+    const photoInput = document.getElementById('board-photo');
+    if (photoInput && photoInput.files && photoInput.files[0]) {
+      photoUrl = await uploadImage(photoInput.files[0], 'boards');
+    }
+    const post = {
+      id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      title: title,
+      photo: photoUrl,
+      content: text,
+      created: new Date().toISOString()
+    };
+    const { error } = await supabase.from('boards').insert(post);
+    if(error) throw error;
+    boards.unshift(post);
+    renderBoards();
+    alert('게시글이 등록되었습니다.');
+    document.getElementById('board-title').value = '';
+    document.getElementById('board-content').value = '';
+    if(photoInput) photoInput.value = '';
+    showPage('board');
+  } catch(err) {
+    console.error(err);
+    alert('저장 중 오류가 발생했습니다.');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async ()=>{
+  const saved = localStorage.getItem('journalist');
+  if(saved) currentJournalist = JSON.parse(saved);
+  await loadArticles();
+  await loadEvents();
+  await loadBoards();
+});
+</script>
 </head>
 <body>
 <header style="position:relative;">
@@ -83,7 +156,7 @@ header { background:#fff; padding:0; position:sticky; top:0; z-index:100; displa
 <div id="password-modal" class="page"><div class="container"><div class="section-title">행사 업로드</div><p style="color:var(--gray);">관리자 비밀번호를 입력하세요</p><input type="password" id="pw-input" class="password-box" placeholder="••••" maxlength="4" inputmode="numeric"><button class="btn" onclick="checkPassword()">확인</button><button class="btn-secondary" onclick="showPage('event')">취소</button><p id="pw-error" style="color:#EF4444;text-align:center;margin-top:12px;display:none;">비밀번호가 올바르지 않습니다.</p></div></div>
 <div id="event-upload" class="page"><div class="container"><div class="section-title">행사 등록</div><p style="font-weight:600;">사진 (최대 4장)</p><div class="upload-area" onclick="document.getElementById('photo-input').click()"><div style="font-size:40px;">📷</div><p style="margin-top:8px;color:var(--gray);">사진을 선택하세요</p></div><input type="file" id="photo-input" accept="image/*" multiple style="display:none;" onchange="handlePhotos(this)"><div id="photo-preview" style="display:flex;gap:8px;flex-wrap:wrap;"></div><p style="font-weight:600;margin:16px 0 8px;">행사 내용 (최대 200자)</p><textarea id="event-content" class="input-box" placeholder="행사 일정과 내용을 입력하세요" maxlength="200" oninput="updateCharCount()"></textarea><div class="char-count"><span id="char-count">0</span>/200</div><button class="btn" onclick="submitEvent()">행사 등록하기</button><button class="btn-secondary" onclick="showPage('event')">취소</button></div></div>
 <div id="board" class="page"><div class="container"><div class="section-title">레벨업 게시판</div><div id="board-list"><div class="card"><img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800"><div class="card-body"><div class="card-title">산 정상에서 바라본 풍경</div><div class="card-desc">함께 걸으니 건강도 레벨업! 등산 초보자도 환영합니다.</div><button class="btn-secondary" style="margin-top:8px;background:#FEE2E2;color:#EF4444;" onclick="this.closest('.card').remove()">삭제</button></div></div></div><button class="btn" onclick="showPage('board-upload')">게시물 올리기</button></div></div>
-<div id="board-upload" class="page"><div class="container"><div class="section-title">게시물 올리기</div><p style="font-weight:600;">제목</p><input type="text" id="board-title" class="input-box" style="min-height:48px;" placeholder="제목을 입력하세요"><p style="font-weight:600;margin-top:12px;">사진 (1장)</p><div class="upload-area" onclick="document.getElementById('board-photo').click()"><div style="font-size:40px;">📷</div><p style="margin-top:8px;color:var(--gray);">사진을 선택하세요</p></div><input type="file" id="board-photo" accept="image/*" style="display:none;" onchange="handleBoardPhoto(this)"><div id="board-photo-preview" style="display:flex;gap:8px;margin:12px 0;"></div><p style="font-weight:600;">내용</p><textarea id="board-content" class="input-box" placeholder="내용을 입력하세요"></textarea><button class="btn" onclick="submitBoardPost()">게시물 등록하기</button><button class="btn-secondary" onclick="showPage('board')">취소</button></div></div>
+<div id="board-upload" class="page"><div class="container"><div class="section-title">게시물 올리기</div><p style="font-weight:600;">제목</p><input type="text" id="board-title" class="input-box" style="min-height:48px;" placeholder="제목을 입력하세요"><p style="font-weight:600;margin-top:12px;">사진 (1장)</p><div class="upload-area" onclick="document.getElementById('board-photo').click()"><div style="font-size:40px;">📷</div><p style="margin-top:8px;color:var(--gray);">사진을 선택하세요</p></div><input type="file" id="board-photo" accept="image/*" style="display:none;" onchange="handleBoardPhoto(this)"><div id="board-photo-preview" style="display:flex;gap:8px;margin:12px 0;"></div><p style="font-weight:600;">내용</p><textarea id="board-content" class="input-box" placeholder="내용을 입력하세요"></textarea><button class="btn" onclick="submitBoard()">게시물 등록하기</button><button class="btn-secondary" onclick="showPage('board')">취소</button></div></div>
 <div id="shop" class="page"><div class="container"><div class="section-title">우리편 상점</div><div id="product-list"><div class="card" data-product-id="demo1"><img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800"><div class="card-body"><div class="card-title">중고 태블릿 판매</div><div class="card-desc">상태 좋은 태블릿입니다. 가격: 150,000원</div><div style="margin-top:12px;padding-top:12px;border-top:1px solid #E2E8F0;"><div style="background:#F8FAFC;padding:8px 12px;border-radius:8px;margin-bottom:6px;font-size:14px;">구매 희망합니다!</div><input type="text" placeholder="구매 희망 메시지" style="width:100%;padding:10px;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:8px;" onkeypress="if(event.key==='Enter')addComment(this,'demo1')"><button style="background:var(--blue);color:white;border:none;padding:8px 16px;border-radius:8px;" onclick="addComment(this.previousElementSibling,'demo1')">메시지 남기기</button></div></div></div></div><button class="btn" onclick="showPage('product-upload')">제품 등록하기</button></div></div>
 <div id="product-upload" class="page"><div class="container"><div class="section-title">제품 등록</div><p style="font-weight:600;">제품 사진 (1장)</p><div class="upload-area" onclick="document.getElementById('product-photo').click()"><div style="font-size:40px;">📷</div><p style="margin-top:8px;color:var(--gray);">제품 사진을 찍어주세요</p></div><input type="file" id="product-photo" accept="image/*" style="display:none;" onchange="handleProductPhoto(this)"><div id="product-photo-preview" style="display:flex;gap:8px;"></div><p style="font-weight:600;margin:16px 0 8px;">제품명</p><input type="text" id="product-name" class="input-box" style="min-height:48px;" placeholder="제품 이름"><p style="font-weight:600;margin:16px 0 8px;">판매 가격 · 구매 방법</p><textarea id="product-desc" class="input-box" placeholder="가격, 상태, 구매 방법 등을 적어주세요"></textarea><button class="btn" onclick="submitProduct()">제품 등록하기</button><button class="btn-secondary" onclick="showPage('shop')">취소</button></div></div>
 <div id="journalist-login" class="page"><div class="container"><div class="section-title">기자 로그인</div><p style="color:var(--gray);margin-bottom:16px;">이름과 전화번호 뒷자리 4자리를 입력하세요</p><input type="text" id="j-name" class="login-input" placeholder="이름 (예: 편준범)"><input type="text" id="j-phone" class="login-input" placeholder="전화번호 뒷자리 4자리" maxlength="4" inputmode="numeric"><button class="btn" onclick="journalistLogin()">로그인</button><p id="login-msg" style="text-align:center;margin-top:12px;color:var(--blue);"></p></div></div>

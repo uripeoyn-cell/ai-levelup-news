@@ -265,6 +265,18 @@ function showPage(id){
     if(navs[navMap[id]]) navs[navMap[id]].classList.add('active');
   }
 }
+
+function checkJournalistAndWrite(){
+  const saved = localStorage.getItem('journalist');
+  if(saved){
+    currentJournalist = JSON.parse(saved);
+    const nameEl = document.getElementById('writer-name');
+    if(nameEl) nameEl.textContent = currentJournalist.name + ' 기자';
+    showPage('article-write');
+  } else {
+    showPage('journalist-login');
+  }
+}
 </script>
 
 <script>

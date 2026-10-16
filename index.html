@@ -289,6 +289,43 @@ function handleArticlePhoto(input){
   };
   reader.readAsDataURL(file);
 }
+
+async function submitArticle(){
+  try {
+    const text = document.getElementById('article-content').value.trim();
+    if(!text) return alert('내용을 입력해 주세요.');
+    if(!currentJournalist) return alert('기자 로그인이 필요합니다.');
+    
+    let photoUrl = articlePhoto || '';
+    const art = {
+      id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      photo: photoUrl,
+      content: text,
+      journalist: (currentJournalist.name || '기자') + ' 기자',
+      created: new Date().toISOString()
+    };
+    
+    if(typeof supabase !== 'undefined'){
+      const { error } = await supabase.from('articles').insert(art);
+      if(error) console.error(error);
+    }
+    
+    if(typeof articles !== 'undefined'){
+      articles.unshift(art);
+      if(typeof renderGallery === 'function') renderGallery();
+    }
+    
+    alert('기사가 업로드되었습니다.');
+    articlePhoto = null;
+    document.getElementById('article-content').value = '';
+    const preview = document.getElementById('article-photo-preview');
+    if(preview) preview.innerHTML = '';
+    showPage('home');
+  } catch(err) {
+    console.error(err);
+    alert('저장 중 오류: ' + err.message);
+  }
+}
 </script>
 
 <script>

@@ -277,6 +277,18 @@ function checkJournalistAndWrite(){
     showPage('journalist-login');
   }
 }
+
+function handleArticlePhoto(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    articlePhoto = e.target.result;
+    const preview = document.getElementById('article-photo-preview');
+    if(preview) preview.innerHTML = '<img src="'+articlePhoto+'" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;">';
+  };
+  reader.readAsDataURL(file);
+}
 </script>
 
 <script>

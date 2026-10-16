@@ -220,16 +220,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 <div id="home" class="page active">
   <div class="container">
     
-    <div class="gallery-grid" id="gallery-grid">
-      <div class="gallery-item" onclick="openFullscreen('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800')">
-        <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800" alt="">
-        <div class="gallery-caption">시니어 AI 교육, 경로당에서 시작됩니다</div>
-      </div>
-      <div class="gallery-item" onclick="openFullscreen('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800')">
-        <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800" alt="">
-        <div class="gallery-caption">산 정상에서 바라본 풍경</div>
-      </div>
-    </div>
+    <div class="gallery-grid" id="gallery-grid"></div>
   </div>
 </div>
 <div id="fullscreen" class="fullscreen" onclick="closeFullscreen()">
@@ -335,6 +326,29 @@ async function submitArticle(){
     alert('저장 중 오류: ' + err.message);
   }
 }
+
+async function loadAndRenderArticles(){
+  try {
+    const sb = window.supabase.createClient('https://midrhpocomwwappgfqlg.supabase.co', 'sb_publishable_mricNZqorMFRJkjhkSVECw_OfdF2cha');
+    const { data, error } = await sb.from('articles').select('*').order('created', { ascending: false }).limit(50);
+    if(error) throw error;
+    const grid = document.getElementById('gallery-grid');
+    if(!grid) return;
+    if(!data || data.length === 0){
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#64748B;padding:40px;">등록된 기사가 없습니다.</div>';
+      return;
+    }
+    grid.innerHTML = data.map(a => `
+      <div class="gallery-item" onclick="openFullscreen('${a.photo || ''}')">
+        ${a.photo ? '<img src="'+a.photo+'" alt="">' : '<div style="aspect-ratio:9/16;background:#f0f0f0;border-radius:12px;"></div>'}
+        <div class="gallery-caption">${(a.content || '').slice(0,40)}</div>
+      </div>
+    `).join('');
+  } catch(e){
+    console.error('Load articles failed:', e);
+  }
+}
+document.addEventListener('DOMContentLoaded', loadAndRenderArticles);
 </script>
 
 <script>

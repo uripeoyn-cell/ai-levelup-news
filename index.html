@@ -116,12 +116,95 @@ async function submitBoard(){
   }
 }
 
+
+let products = [];
+async function loadProducts(){
+  try {
+    const { data, error } = await supabase.from('products').select('*').order('created', { ascending: false }).limit(100);
+    if(error) throw error;
+    products = data || [];
+  } catch(e){
+    console.error('loadProducts failed:', e);
+    products = [];
+  }
+  renderProducts();
+}
+function renderProducts(){
+  const list = document.getElementById('product-list');
+  if(!list) return;
+  list.innerHTML = products.map(p => `
+    <div class="card">
+      ${p.photo ? '<img src="'+p.photo+'" style="width:100%;height:180px;object-fit:cover;">' : ''}
+      <div class="card-body">
+        <div class="card-title">${p.name || ''}</div>
+        <div class="card-desc">${p.description || ''} ${p.price ? '<br>가격: '+p.price+'원' : ''}</div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #E2E8F0;">
+          <input type="text" placeholder="구매 메모를 남겨주세요" class="input-box" style="min-height:40px;font-size:14px;" id="memo-${p.id}">
+          <button class="btn" style="margin-top:6px;padding:10px;" onclick="addProductMemo('${p.id}')">구매 요청</button>
+        </div>
+        <button class="btn-secondary" style="margin-top:8px;background:#FEE2E2;color:#EF4444;" onclick="deleteProduct('${p.id}')">삭제</button>
+      </div>
+    </div>
+  `).join('') || '<div style="text-align:center;color:#64748B;padding:40px;">등록된 제품이 없습니다.</div>';
+}
+async function deleteProduct(id){
+  if(!confirm('삭제하시겠습니까?')) return;
+  const { error } = await supabase.from('products').delete().eq('id', id);
+  if(error) return alert('삭제 실패');
+  products = products.filter(p => p.id !== id);
+  renderProducts();
+}
+async function addProductMemo(id){
+  const input = document.getElementById('memo-'+id);
+  const memo = input ? input.value.trim() : '';
+  if(!memo) return alert('메모를 입력해 주세요.');
+  alert('구매 요청이 접수되었습니다: ' + memo);
+  if(input) input.value = '';
+}
+async function submitProduct(){
+  try {
+    const name = document.getElementById('product-name').value.trim();
+    const desc = document.getElementById('product-desc').value.trim();
+    const price = document.getElementById('product-price') ? document.getElementById('product-price').value.trim() : '';
+    if(!name) return alert('제품명을 입력해 주세요.');
+    let photoUrl = '';
+    const photoInput = document.getElementById('product-photo');
+    if (photoInput && photoInput.files && photoInput.files[0]) {
+      photoUrl = await uploadImage(photoInput.files[0], 'products');
+    } else if (productPhoto) {
+      photoUrl = productPhoto;
+    }
+    const prod = {
+      id: Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      name: name,
+      description: desc,
+      price: price,
+      photo: photoUrl,
+      created: new Date().toISOString()
+    };
+    const { error } = await supabase.from('products').insert(prod);
+    if(error) throw error;
+    products.unshift(prod);
+    renderProducts();
+    alert('제품이 등록되었습니다.');
+    document.getElementById('product-name').value = '';
+    document.getElementById('product-desc').value = '';
+    if(document.getElementById('product-price')) document.getElementById('product-price').value = '';
+    if(photoInput) photoInput.value = '';
+    productPhoto = null;
+    showPage('shop');
+  } catch(err) {
+    console.error(err);
+    alert('저장 중 오류가 발생했습니다.');
+  }
+}
 document.addEventListener('DOMContentLoaded', async ()=>{
   const saved = localStorage.getItem('journalist');
   if(saved) currentJournalist = JSON.parse(saved);
   await loadArticles();
   await loadEvents();
   await loadBoards();
+  await loadProducts();
 });
 </script>
 </head>

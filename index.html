@@ -254,6 +254,20 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   <button class="nav-item" onclick="checkJournalistAndWrite()"><span class="icon">✍️</span>글쓰기</button>
 </nav>
 <script>
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const page=document.getElementById(id);
+  if(page) page.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navMap = {home:0, event:1, board:2, shop:3};
+  if(navMap[id] !== undefined){
+    const navs = document.querySelectorAll('.nav-item');
+    if(navs[navMap[id]]) navs[navMap[id]].classList.add('active');
+  }
+}
+</script>
+
+<script>
 
 
 const SUPABASE_URL = 'https://midrhpocomwwappgfqlg.supabase.co';

@@ -327,25 +327,54 @@ async function submitArticle(){
   }
 }
 
+let currentArticleId = null;
 async function loadAndRenderArticles(){
   try {
     const sb = window.supabase.createClient('https://midrhpocomwwappgfqlg.supabase.co', 'sb_publishable_mricNZqorMFRJkjhkSVECw_OfdF2cha');
     const { data, error } = await sb.from('articles').select('*').order('created', { ascending: false }).limit(50);
     if(error) throw error;
+    window.articlesData = data || [];
     const grid = document.getElementById('gallery-grid');
     if(!grid) return;
     if(!data || data.length === 0){
       grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#64748B;padding:40px;">등록된 기사가 없습니다.</div>';
       return;
     }
-    grid.innerHTML = data.map(a => `
-      <div class="gallery-item" onclick="openFullscreen('${a.photo || ''}')">
+    grid.innerHTML = data.map((a, i) => `
+      <div class="gallery-item" onclick="openArticleFullscreen(${i})">
         ${a.photo ? '<img src="'+a.photo+'" alt="">' : '<div style="aspect-ratio:9/16;background:#f0f0f0;border-radius:12px;"></div>'}
         <div class="gallery-caption">${(a.content || '').slice(0,40)}</div>
       </div>
     `).join('');
   } catch(e){
     console.error('Load articles failed:', e);
+  }
+}
+function openArticleFullscreen(index){
+  const a = window.articlesData[index];
+  if(!a) return;
+  currentArticleId = a.id;
+  const fs = document.getElementById('fullscreen');
+  const img = document.getElementById('fullscreen-img');
+  if(img && a.photo) img.src = a.photo;
+  if(fs) fs.classList.add('show');
+}
+function closeFullscreen(){
+  const fs = document.getElementById('fullscreen');
+  if(fs) fs.classList.remove('show');
+  currentArticleId = null;
+}
+async function deleteCurrentArticle(){
+  if(!currentArticleId) return;
+  if(!confirm('이 기사를 삭제하시겠습니까?')) return;
+  try {
+    const sb = window.supabase.createClient('https://midrhpocomwwappgfqlg.supabase.co', 'sb_publishable_mricNZqorMFRJkjhkSVECw_OfdF2cha');
+    const { error } = await sb.from('articles').delete().eq('id', currentArticleId);
+    if(error) throw error;
+    closeFullscreen();
+    loadAndRenderArticles();
+  } catch(e){
+    alert('삭제 실패: ' + e.message);
   }
 }
 document.addEventListener('DOMContentLoaded', loadAndRenderArticles);

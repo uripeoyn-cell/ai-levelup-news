@@ -318,6 +318,11 @@ function showPage(id){
   const page=document.getElementById(id);
   if(page) page.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navMap = {home:0, event:1, board:2, shop:3};
+  if(navMap[id] !== undefined){
+    const navs = document.querySelectorAll('.nav-item');
+    if(navs[navMap[id]]) navs[navMap[id]].classList.add('active');
+  }
   const full=document.getElementById('header-full');
   const simple=document.getElementById('header-simple');
   if(id==='home'){
@@ -493,4 +498,7 @@ async function submitArticle(){
   }
 }
 
->
+
+</script>
+</body>
+</html>
